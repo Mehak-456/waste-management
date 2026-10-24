@@ -78,8 +78,8 @@ const Profile: React.FC = () => {
           <div className="hidden sm:block">
             <div className="bg-white bg-opacity-20 p-4 rounded-xl text-center">
               <User className="h-8 w-8 mx-auto mb-2 text-green-200" />
-              <p className="text-sm text-green-100">Worker ID</p>
-              <p className="text-xl font-bold">{user.workerId}</p>
+              <p className="text-sm text-green-100">{user.role === 'citizen' ? 'Citizen ID' : user.role === 'authority' ? 'Officer ID' : 'Worker ID'}</p>
+              <p className="text-xl font-bold">{user.workerId || user.citizenId || user.authorityId || user.id}</p>
             </div>
           </div>
         </div>
@@ -143,11 +143,11 @@ const Profile: React.FC = () => {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Worker ID
+                  {user.role === 'citizen' ? 'Citizen ID' : user.role === 'authority' ? 'Officer ID' : 'Worker ID'}
                 </label>
                 <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
                   <Shield className="h-5 w-5 text-gray-400" />
-                  <span className="text-gray-900 font-mono">{user.workerId}</span>
+                  <span className="text-gray-900 font-mono">{user.workerId || user.citizenId || user.authorityId || user.id}</span>
                 </div>
               </div>
 
@@ -172,33 +172,35 @@ const Profile: React.FC = () => {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Join Date
+                  Role & Account Type
                 </label>
                 <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
-                  <Calendar className="h-5 w-5 text-gray-400" />
-                  <span className="text-gray-900">{new Date(user.joinDate).toLocaleDateString()}</span>
+                  <Shield className="h-5 w-5 text-indigo-500" />
+                  <span className="text-gray-900 font-bold capitalize">{user.role || 'Worker'}</span>
                 </div>
               </div>
             </div>
 
             {/* Work Details */}
             <div className="mt-8 pt-6 border-t border-gray-100">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Work Details</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                {user.role === 'citizen' ? 'Community Details' : user.role === 'authority' ? 'Administrative Details' : 'Work Details'}
+              </h3>
               
               <div className="grid sm:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Team Assignment
+                    {user.role === 'citizen' ? 'Community Role' : user.role === 'authority' ? 'Department' : 'Team Assignment'}
                   </label>
                   <div className="flex items-center space-x-3 p-3 bg-blue-50 rounded-lg">
                     <User className="h-5 w-5 text-blue-600" />
-                    <span className="text-gray-900 font-medium">{user.team}</span>
+                    <span className="text-gray-900 font-medium">{user.team || user.department || 'Registered Resident'}</span>
                   </div>
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Assigned Zone
+                    Assigned Ward / Sector
                   </label>
                   <div className="flex items-center space-x-3 p-3 bg-green-50 rounded-lg">
                     <MapPin className="h-5 w-5 text-green-600" />
@@ -220,8 +222,10 @@ const Profile: React.FC = () => {
                   <Heart className="h-6 w-6 text-red-600" />
                 </div>
                 <div>
-                  <h2 className="text-xl font-bold text-gray-900">Health Status</h2>
-                  <p className="text-sm text-gray-500">Your health and safety information</p>
+                  <h2 className="text-xl font-bold text-gray-900">
+                    {user.role === 'citizen' ? 'Neighborhood Health' : 'Health Status'}
+                  </h2>
+                  <p className="text-sm text-gray-500">Health and environmental status</p>
                 </div>
               </div>
             </div>
@@ -229,26 +233,32 @@ const Profile: React.FC = () => {
             <div className="p-6 space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Last Check-up Date
+                  {user.role === 'citizen' ? 'Account Active Since' : 'Last Check-up Date'}
                 </label>
                 <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
                   <Calendar className="h-5 w-5 text-gray-400" />
-                  <span className="text-gray-900">{new Date(user.lastCheckup).toLocaleDateString()}</span>
+                  <span className="text-gray-900">
+                    {user.lastCheckup 
+                      ? new Date(user.lastCheckup).toLocaleDateString() 
+                      : user.joinDate 
+                        ? new Date(user.joinDate).toLocaleDateString() 
+                        : 'Active'}
+                  </span>
                 </div>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Current Condition
+                  Status
                 </label>
                 <div className="flex items-center space-x-3">
-                  <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getHealthStatusColor(user.healthStatus)}`}>
-                    {user.healthStatus === 'Good' ? (
+                  <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getHealthStatusColor(user.healthStatus || 'Good')}`}>
+                    {(user.healthStatus || 'Good') === 'Good' ? (
                       <CheckCircle className="h-4 w-4 mr-1" />
                     ) : (
                       <AlertCircle className="h-4 w-4 mr-1" />
                     )}
-                    {user.healthStatus}
+                    {user.healthStatus || 'Verified Active'}
                   </span>
                 </div>
               </div>

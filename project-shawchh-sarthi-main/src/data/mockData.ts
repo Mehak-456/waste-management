@@ -1,10 +1,22 @@
-import { User, Task, Issue, PerformanceData, LeaderboardEntry, TrainingVideo } from '../types';
+import { 
+  User, 
+  Task, 
+  Issue, 
+  PerformanceData, 
+  LeaderboardEntry, 
+  TrainingVideo,
+  AreaCleanliness,
+  CitizenReport,
+  WorkerAuditRecord
+} from '../types';
 
-// Mock Users Database
+// Mock Users Database (Workers, Citizens, Municipal Authorities)
 export const mockUsers: User[] = [
+  // Sanitation Workers
   {
     id: '1',
     fullName: 'Rajesh Kumar',
+    role: 'worker',
     workerId: 'SW-101',
     mobile: '+91-9876543210',
     password: 'password123',
@@ -17,6 +29,7 @@ export const mockUsers: User[] = [
   {
     id: '2',
     fullName: 'Priya Sharma',
+    role: 'worker',
     workerId: 'SW-102',
     mobile: '+91-9876543211',
     password: 'password123',
@@ -29,6 +42,7 @@ export const mockUsers: User[] = [
   {
     id: '3',
     fullName: 'Amit Singh',
+    role: 'worker',
     workerId: 'SW-103',
     mobile: '+91-9876543212',
     password: 'password123',
@@ -41,6 +55,7 @@ export const mockUsers: User[] = [
   {
     id: '4',
     fullName: 'Sunita Devi',
+    role: 'worker',
     workerId: 'SW-104',
     mobile: '+91-9876543213',
     password: 'password123',
@@ -53,6 +68,7 @@ export const mockUsers: User[] = [
   {
     id: '5',
     fullName: 'Vikram Yadav',
+    role: 'worker',
     workerId: 'SW-105',
     mobile: '+91-9876543214',
     password: 'password123',
@@ -61,6 +77,64 @@ export const mockUsers: User[] = [
     joinDate: '2023-09-05',
     lastCheckup: '2024-08-05',
     healthStatus: 'Good'
+  },
+
+  // Citizens
+  {
+    id: 'c1',
+    fullName: 'Pooja Verma',
+    role: 'citizen',
+    citizenId: 'CZ-101',
+    mobile: '+91-9876500001',
+    password: 'password123',
+    zone: 'Sector A',
+    joinDate: '2024-01-10'
+  },
+  {
+    id: 'c2',
+    fullName: 'Ramesh Patel',
+    role: 'citizen',
+    citizenId: 'CZ-102',
+    mobile: '+91-9876500002',
+    password: 'password123',
+    zone: 'Sector B',
+    joinDate: '2024-02-15'
+  },
+  {
+    id: 'c3',
+    fullName: 'Ananya Deshmukh',
+    role: 'citizen',
+    citizenId: 'CZ-103',
+    mobile: '+91-9876500003',
+    password: 'password123',
+    zone: 'Sector C',
+    joinDate: '2024-03-22'
+  },
+
+  // Municipal Authorities
+  {
+    id: 'a1',
+    fullName: 'Dr. Ananya Roy',
+    role: 'authority',
+    authorityId: 'MUNI-01',
+    mobile: '+91-9876599999',
+    password: 'password123',
+    zone: 'Zone 1 (All Sectors A-E)',
+    designation: 'Chief Municipal Health & Sanitation Officer',
+    department: 'Directorate of Municipal Solid Waste Management',
+    joinDate: '2021-06-01'
+  },
+  {
+    id: 'a2',
+    fullName: 'K. S. Sharma',
+    role: 'authority',
+    authorityId: 'MUNI-02',
+    mobile: '+91-9876588888',
+    password: 'password123',
+    zone: 'Sector A & B Field Units',
+    designation: 'Zonal Chief Sanitary Inspector',
+    department: 'Field Quality Assurance & Compliance',
+    joinDate: '2022-04-12'
   }
 ];
 
@@ -190,7 +264,12 @@ export let mockIssues: Issue[] = [
 
 // Helper functions for mock database operations
 export const saveUser = (user: User) => {
-  const existingIndex = mockUsers.findIndex(u => u.workerId === user.workerId);
+  const existingIndex = mockUsers.findIndex(u => 
+    (user.workerId && u.workerId === user.workerId) || 
+    (user.citizenId && u.citizenId === user.citizenId) ||
+    (user.authorityId && u.authorityId === user.authorityId) ||
+    u.id === user.id
+  );
   if (existingIndex >= 0) {
     mockUsers[existingIndex] = user;
   } else {
@@ -198,8 +277,18 @@ export const saveUser = (user: User) => {
   }
 };
 
-export const findUserByCredentials = (workerId: string, password: string): User | null => {
-  return mockUsers.find(user => user.workerId === workerId && user.password === password) || null;
+export const findUserByCredentials = (identifier: string, password: string): User | null => {
+  const trimmed = identifier.trim().toLowerCase();
+  return mockUsers.find(user => {
+    const matchesId = 
+      (user.workerId && user.workerId.toLowerCase() === trimmed) ||
+      (user.citizenId && user.citizenId.toLowerCase() === trimmed) ||
+      (user.authorityId && user.authorityId.toLowerCase() === trimmed) ||
+      user.mobile.toLowerCase() === trimmed ||
+      user.fullName.toLowerCase() === trimmed;
+    
+    return matchesId && user.password === password;
+  }) || null;
 };
 
 export const findUserById = (id: string): User | null => {
@@ -231,11 +320,274 @@ export const updateTaskStatus = (
   }
 };
 
-
 export const addIssue = (issue: Issue) => {
   mockIssues.push(issue);
 };
 
 export const getTasksForUser = (): Task[] => {
   return mockTasks;
+};
+
+// Mock Areas Cleanliness Data
+export let mockAreas: AreaCleanliness[] = [
+  {
+    id: 'area-1',
+    name: 'Green Park Main Gate & Sector A',
+    zone: 'Sector A',
+    ward: 'Ward 14',
+    cleanlinessScore: 95,
+    status: 'clean',
+    lastCleanedTime: 'Today at 08:30 AM',
+    assignedWorkerName: 'Rajesh Kumar',
+    assignedWorkerId: 'SW-101',
+    lat: 28.5494,
+    lng: 77.2066,
+    proofBefore: 'https://ik.imagekit.io/sihhackstone/greater_noida_door_to_door_waste-collection_1631556299135_1631556299453.jpeg',
+    proofAfter: 'https://ik.imagekit.io/sihhackstone/unnamed.png',
+    verifiedByCitizenCount: 42,
+    totalReports: 1,
+    nextScheduledCollection: 'Tomorrow 07:30 AM',
+    wasteTypesCollected: ['Dry Waste', 'Wet Waste', 'Plastic Bins']
+  },
+  {
+    id: 'area-2',
+    name: 'Community Center & Block A Market',
+    zone: 'Sector A',
+    ward: 'Ward 14',
+    cleanlinessScore: 91,
+    status: 'clean',
+    lastCleanedTime: 'Today at 09:45 AM',
+    assignedWorkerName: 'Rajesh Kumar',
+    assignedWorkerId: 'SW-101',
+    lat: 28.5504,
+    lng: 77.2076,
+    proofBefore: 'https://ik.imagekit.io/sihhackstone/Gemini_Genevr2063vr2.png?updatedAt=1758101678699',
+    proofAfter: 'https://ik.imagekit.io/sihhackstone/Gem256.png?updatedAt=1758102184684',
+    verifiedByCitizenCount: 29,
+    totalReports: 0,
+    nextScheduledCollection: 'Tomorrow 08:15 AM',
+    wasteTypesCollected: ['Commercial Waste', 'Cardboard', 'Organic']
+  },
+  {
+    id: 'area-3',
+    name: 'Sector B Central Market & Plaza',
+    zone: 'Sector B',
+    ward: 'Ward 18',
+    cleanlinessScore: 82,
+    status: 'in-progress',
+    lastCleanedTime: 'Yesterday at 04:15 PM',
+    assignedWorkerName: 'Priya Sharma',
+    assignedWorkerId: 'SW-102',
+    lat: 28.5524,
+    lng: 77.2096,
+    proofBefore: 'https://ik.imagekit.io/sihhackstone/greater_noida_door_to_door_waste-collection_1631556299135_1631556299453.jpeg',
+    verifiedByCitizenCount: 16,
+    totalReports: 2,
+    nextScheduledCollection: 'Today 02:30 PM (In-Transit)',
+    wasteTypesCollected: ['Market Waste', 'Dry Waste']
+  },
+  {
+    id: 'area-4',
+    name: 'Sector C Residential Complex Phase 2',
+    zone: 'Sector C',
+    ward: 'Ward 22',
+    cleanlinessScore: 68,
+    status: 'needs-attention',
+    lastCleanedTime: 'Yesterday at 11:00 AM',
+    assignedWorkerName: 'Amit Singh',
+    assignedWorkerId: 'SW-103',
+    lat: 28.5534,
+    lng: 77.2106,
+    verifiedByCitizenCount: 8,
+    totalReports: 3,
+    nextScheduledCollection: 'Today 03:00 PM (Priority)',
+    wasteTypesCollected: ['Household Garbage', 'Bio-degradable']
+  },
+  {
+    id: 'area-5',
+    name: 'Sector D School & Playground Perimeter',
+    zone: 'Sector D',
+    ward: 'Ward 25',
+    cleanlinessScore: 88,
+    status: 'clean',
+    lastCleanedTime: 'Today at 07:15 AM',
+    assignedWorkerName: 'Sunita Devi',
+    assignedWorkerId: 'SW-104',
+    lat: 28.5544,
+    lng: 77.2116,
+    proofBefore: 'https://ik.imagekit.io/sihhackstone/greater_noida_door_to_door_waste-collection_1631556299135_1631556299453.jpeg',
+    proofAfter: 'https://ik.imagekit.io/sihhackstone/Gem256.png?updatedAt=1758102184684',
+    verifiedByCitizenCount: 35,
+    totalReports: 0,
+    nextScheduledCollection: 'Tomorrow 07:00 AM',
+    wasteTypesCollected: ['Paper/Stationery Waste', 'Dry Waste']
+  }
+];
+
+// Mock Citizen Complaints / Grievances
+export let mockCitizenReports: CitizenReport[] = [
+  {
+    id: 'CR-1001',
+    citizenId: 'CZ-101',
+    citizenName: 'Pooja Verma',
+    citizenMobile: '+91-9876500001',
+    location: 'Sector A, Behind Community Center Park',
+    zone: 'Sector A',
+    issueType: 'overflowing-bin',
+    description: 'Community dustbin overflowing with garden cuttings and kitchen waste since yesterday evening.',
+    photo: 'https://ik.imagekit.io/sihhackstone/greater_noida_door_to_door_waste-collection_1631556299135_1631556299453.jpeg',
+    timestamp: '2024-03-24T08:15:00Z',
+    status: 'resolved',
+    assignedToWorker: 'Rajesh Kumar (SW-101)',
+    resolvedPhoto: 'https://ik.imagekit.io/sihhackstone/unnamed.png',
+    resolutionNotes: 'Collected and sanitized bin at 09:30 AM by Sector A route crew.'
+  },
+  {
+    id: 'CR-1002',
+    citizenId: 'CZ-102',
+    citizenName: 'Ramesh Patel',
+    citizenMobile: '+91-9876500002',
+    location: 'Sector B Market lane near ATM',
+    zone: 'Sector B',
+    issueType: 'garbage-dump',
+    description: 'Illegal dumping of plastic packaging bags beside the vegetable stalls blocking walking pathway.',
+    photo: 'https://ik.imagekit.io/sihhackstone/Gemini_Genevr2063vr2.png?updatedAt=1758101678699',
+    timestamp: '2024-03-24T10:45:00Z',
+    status: 'in-progress',
+    assignedToWorker: 'Priya Sharma (SW-102)',
+    resolutionNotes: 'Dispatched secondary cleanup vehicle DL-1WA-204.'
+  },
+  {
+    id: 'CR-1003',
+    citizenId: 'CZ-103',
+    citizenName: 'Ananya Deshmukh',
+    citizenMobile: '+91-9876500003',
+    location: 'Sector C, Main Gate of Block 3',
+    zone: 'Sector C',
+    issueType: 'missed-pickup',
+    description: 'Morning door-to-door waste vehicle missed Block 3 residential row today.',
+    timestamp: '2024-03-24T11:20:00Z',
+    status: 'pending',
+    assignedToWorker: 'Amit Singh (SW-103)'
+  }
+];
+
+// Mock Worker Audit Records for Municipal Authority Review
+export let mockWorkerAudits: WorkerAuditRecord[] = [
+  {
+    workerId: 'SW-101',
+    workerName: 'Rajesh Kumar',
+    zone: 'Sector A',
+    tasksAssigned: 5,
+    tasksCompleted: 4,
+    totalWeightKg: 43,
+    photoComplianceScore: 98,
+    auditStatus: 'approved',
+    calculatedIncentive: 450
+  },
+  {
+    workerId: 'SW-102',
+    workerName: 'Priya Sharma',
+    zone: 'Sector B',
+    tasksAssigned: 5,
+    tasksCompleted: 3,
+    totalWeightKg: 35,
+    photoComplianceScore: 92,
+    auditStatus: 'approved',
+    calculatedIncentive: 380
+  },
+  {
+    workerId: 'SW-103',
+    workerName: 'Amit Singh',
+    zone: 'Sector C',
+    tasksAssigned: 6,
+    tasksCompleted: 5,
+    totalWeightKg: 52,
+    photoComplianceScore: 99,
+    auditStatus: 'approved',
+    calculatedIncentive: 550
+  },
+  {
+    workerId: 'SW-104',
+    workerName: 'Sunita Devi',
+    zone: 'Sector D',
+    tasksAssigned: 4,
+    tasksCompleted: 3,
+    totalWeightKg: 31,
+    photoComplianceScore: 90,
+    auditStatus: 'under-review',
+    calculatedIncentive: 320
+  },
+  {
+    workerId: 'SW-105',
+    workerName: 'Vikram Yadav',
+    zone: 'Sector E',
+    tasksAssigned: 5,
+    tasksCompleted: 2,
+    totalWeightKg: 22,
+    photoComplianceScore: 78,
+    auditStatus: 'under-review',
+    calculatedIncentive: 210
+  }
+];
+
+export const getAreas = (): AreaCleanliness[] => {
+  return mockAreas;
+};
+
+export const voteAreaCleanliness = (areaId: string, isClean: boolean) => {
+  const area = mockAreas.find(a => a.id === areaId);
+  if (area) {
+    if (isClean) {
+      area.verifiedByCitizenCount += 1;
+      area.cleanlinessScore = Math.min(100, area.cleanlinessScore + 1);
+    } else {
+      area.cleanlinessScore = Math.max(20, area.cleanlinessScore - 4);
+      if (area.cleanlinessScore < 70) {
+        area.status = 'needs-attention';
+      }
+    }
+  }
+};
+
+export const getCitizenReports = (): CitizenReport[] => {
+  return mockCitizenReports;
+};
+
+export const addCitizenReport = (report: CitizenReport) => {
+  mockCitizenReports.unshift(report);
+  const area = mockAreas.find(a => a.zone === report.zone);
+  if (area) {
+    area.totalReports += 1;
+    area.status = 'needs-attention';
+    area.cleanlinessScore = Math.max(30, area.cleanlinessScore - 5);
+  }
+};
+
+export const updateCitizenReportStatus = (
+  reportId: string, 
+  status: 'pending' | 'assigned' | 'in-progress' | 'resolved',
+  notes?: string
+) => {
+  const report = mockCitizenReports.find(r => r.id === reportId);
+  if (report) {
+    report.status = status;
+    if (notes) {
+      report.resolutionNotes = notes;
+    }
+    if (status === 'resolved') {
+      report.resolvedPhoto = 'https://ik.imagekit.io/sihhackstone/unnamed.png';
+    }
+  }
+};
+
+export const getWorkerAudits = (): WorkerAuditRecord[] => {
+  return mockWorkerAudits;
+};
+
+export const updateWorkerAuditStatus = (workerId: string, status: 'approved' | 'under-review' | 'flagged') => {
+  const audit = mockWorkerAudits.find(a => a.workerId === workerId);
+  if (audit) {
+    audit.auditStatus = status;
+  }
 };

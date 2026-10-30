@@ -40,9 +40,9 @@ function App() {
             </ProtectedRoute>
           } />
           
-          {/* Sanitation Worker Routes */}
+          {/* Sanitation Worker Routes (Workers & Authorities for oversight) */}
           <Route path="/dashboard" element={
-            <ProtectedRoute>
+            <ProtectedRoute allowedRoles={['worker', 'authority']}>
               <Layout>
                 <Dashboard />
               </Layout>
@@ -50,7 +50,7 @@ function App() {
           } />
           
           <Route path="/performance" element={
-            <ProtectedRoute>
+            <ProtectedRoute allowedRoles={['worker', 'authority']}>
               <Layout>
                 <Performance />
               </Layout>
@@ -58,25 +58,25 @@ function App() {
           } />
           
           <Route path="/training" element={
-            <ProtectedRoute>
+            <ProtectedRoute allowedRoles={['worker', 'authority']}>
               <Layout>
                 <Training />
               </Layout>
             </ProtectedRoute>
           } />
 
-          {/* Citizen Cleanliness Portal */}
+          {/* Citizen Cleanliness Portal (Citizens & Authorities for public transparency) */}
           <Route path="/citizen" element={
-            <ProtectedRoute>
+            <ProtectedRoute allowedRoles={['citizen', 'authority']}>
               <Layout>
                 <CitizenPortal />
               </Layout>
             </ProtectedRoute>
           } />
 
-          {/* Municipal Authority Command Desk */}
+          {/* Municipal Authority Command Desk (Strictly Municipal Authorities only) */}
           <Route path="/authority" element={
-            <ProtectedRoute>
+            <ProtectedRoute allowedRoles={['authority']}>
               <Layout>
                 <AuthorityPortal />
               </Layout>
@@ -85,7 +85,7 @@ function App() {
           
           {/* Shared / General Routes */}
           <Route path="/report" element={
-            <ProtectedRoute>
+            <ProtectedRoute allowedRoles={['citizen', 'worker', 'authority']}>
               <Layout>
                 <ReportIssue />
               </Layout>
@@ -93,7 +93,7 @@ function App() {
           } />
           
           <Route path="/profile" element={
-            <ProtectedRoute>
+            <ProtectedRoute allowedRoles={['citizen', 'worker', 'authority']}>
               <Layout>
                 <Profile />
               </Layout>

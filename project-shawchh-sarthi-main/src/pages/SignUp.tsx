@@ -1,14 +1,33 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { saveUser } from '../data/mockData';
-import { User } from '../types';
-import { Recycle, Eye, EyeOff, AlertCircle, CheckCircle } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
+import { 
+  Recycle, 
+  Eye, 
+  EyeOff, 
+  AlertCircle, 
+  HardHat, 
+  User as UserIcon, 
+  Building2,
+  Mail,
+  Lock,
+  Phone,
+  MapPin,
+  CheckCircle2,
+  Loader2
+} from 'lucide-react';
 
 const SignUp: React.FC = () => {
+  const { signUp, isConfigured } = useAuth();
+  const navigate = useNavigate();
+
+  const [selectedRole, setSelectedRole] = useState<'citizen' | 'worker'>('citizen');
   const [formData, setFormData] = useState({
     fullName: '',
+    email: '',
     workerId: '',
     mobile: '',
+    zone: 'Sector A',
     password: '',
     confirmPassword: ''
   });
@@ -16,7 +35,7 @@ const SignUp: React.FC = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
-  const navigate = useNavigate();
+  const [verificationNotice, setVerificationNotice] = useState<string | null>(null);
 
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
@@ -25,16 +44,24 @@ const SignUp: React.FC = () => {
       newErrors.fullName = 'Full name is required';
     }
 
-    if (!formData.workerId.trim()) {
-      newErrors.workerId = 'Worker ID is required';
-    } else if (!formData.workerId.match(/^SW-\d+$/)) {
-      newErrors.workerId = 'Worker ID must be in format SW-XXX';
+    if (!formData.email.trim()) {
+      newErrors.email = 'Email address is required';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email.trim())) {
+      newErrors.email = 'Please enter a valid email address';
+    }
+
+    if (selectedRole === 'worker') {
+      if (!formData.workerId.trim()) {
+        newErrors.workerId = 'Worker ID is required (e.g., SW-105)';
+      } else if (!formData.workerId.match(/^SW-\d+$/)) {
+        newErrors.workerId = 'Worker ID must follow format SW-XXX';
+      }
     }
 
     if (!formData.mobile.trim()) {
       newErrors.mobile = 'Mobile number is required';
-    } else if (!formData.mobile.match(/^\+?[1-9]\d{1,14}$/)) {
-      newErrors.mobile = 'Please enter a valid mobile number';
+    } else if (!formData.mobile.match(/^\+?[1-9]\d{9,14}$/)) {
+      newErrors.mobile = 'Please enter a valid 10-digit mobile number';
     }
 
     if (!formData.password) {
@@ -55,6 +82,7 @@ const SignUp: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setVerificationNotice(null);
     
     if (!validateForm()) {
       return;
@@ -63,45 +91,46 @@ const SignUp: React.FC = () => {
     setIsLoading(true);
 
     try {
-      const newUser: User = {
-        id: Date.now().toString(),
-        fullName: formData.fullName,
-        workerId: formData.workerId,
-        mobile: formData.mobile,
+      const result = await signUp({
+        fullName: formData.fullName.trim(),
+        email: formData.email.trim(),
         password: formData.password,
-        team: 'Team Alpha',
-        zone: 'Sector A',
-        joinDate: new Date().toISOString().split('T')[0],
-        lastCheckup: new Date().toISOString().split('T')[0],
-        healthStatus: 'Good'
-      };
+        mobile: formData.mobile.trim(),
+        role: selectedRole,
+        zone: formData.zone,
+        workerId: selectedRole === 'worker' ? formData.workerId.trim() : undefined,
+      });
 
-      saveUser(newUser);
-      
-      // Show success message and redirect
-      setTimeout(() => {
+      if (!result.success) {
+        setErrors({ general: result.error || 'Registration failed. Please check your details.' });
+        return;
+      }
+
+      if (result.requiresEmailVerification) {
+        setVerificationNotice(
+          `A verification link has been dispatched to ${formData.email}. Please verify your email before logging in.`
+        );
+      } else {
         navigate('/login', { 
           state: { 
-            message: 'Account created successfully! Please sign in with your credentials.' 
+            message: 'Account created successfully with Supabase! Please sign in with your credentials.' 
           } 
         });
-      }, 1000);
-
-    } catch (error) {
-      setErrors({ general: 'Registration failed. Please try again.' });
+      }
+    } catch (err: unknown) {
+      setErrors({ general: (err as Error)?.message || 'An unexpected error occurred. Please try again.' });
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
       [name]: value
     }));
 
-    // Clear specific field error when user starts typing
     if (errors[name]) {
       setErrors(prev => ({
         ...prev,
@@ -116,95 +145,231 @@ const SignUp: React.FC = () => {
         {/* Header */}
         <div className="text-center mb-8">
           <div className="inline-flex items-center space-x-3 mb-4">
-            <div className="bg-gradient-to-r from-green-500 to-blue-600 p-3 rounded-full">
+            <div className="bg-gradient-to-r from-green-500 to-blue-600 p-3 rounded-full shadow-lg">
               <Recycle className="h-6 w-6 text-white" />
             </div>
             <div className="text-left">
-              <h1 className="text-2xl font-bold bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent">
-                SWACHH
+              <h1 className="text-2xl font-black bg-gradient-to-r from-green-600 to-blue-600 bg-clip-text text-transparent">
+                SWACHH SEVA
               </h1>
-              <p className="text-sm text-gray-500">Smart Waste Analytics</p>
+              <p className="text-xs text-gray-500 font-semibold tracking-wider uppercase">Municipal Waste Management</p>
             </div>
           </div>
-          <h2 className="text-3xl font-bold text-gray-900">Join Our Team</h2>
-          <p className="mt-2 text-sm text-gray-600">Create your worker account to get started</p>
+          <h2 className="text-3xl font-extrabold text-gray-900">Create an Account</h2>
+          <p className="mt-2 text-sm text-gray-600">Register for verified municipal access and tracking</p>
         </div>
 
-        {/* Form */}
-        <div className="bg-white shadow-xl rounded-2xl p-8">
-          <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Backend Configuration Alert if Unconfigured */}
+        {!isConfigured && (
+          <div className="mb-6 p-4 rounded-2xl bg-amber-50 border border-amber-200 text-amber-800 text-xs flex items-start space-x-3">
+            <AlertCircle className="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="font-bold">Supabase Backend Unconfigured</p>
+              <p className="mt-0.5 text-amber-700">
+                To enable live account registration in PostgreSQL, update <code className="bg-amber-100 px-1 py-0.5 rounded font-mono">.env</code> with your Supabase URL & Anon Key.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Email Verification Banner */}
+        {verificationNotice && (
+          <div className="mb-6 p-5 rounded-2xl bg-teal-50 border border-teal-200 text-teal-900 text-sm space-y-3 shadow-md">
+            <div className="flex items-center space-x-2">
+              <CheckCircle2 className="h-5 w-5 text-teal-600" />
+              <h3 className="font-bold">Verification Email Sent</h3>
+            </div>
+            <p className="text-xs text-teal-800 leading-relaxed">{verificationNotice}</p>
+            <Link
+              to="/login"
+              className="inline-block w-full text-center py-2 bg-teal-600 text-white rounded-xl text-xs font-bold hover:bg-teal-700 transition"
+            >
+              Proceed to Sign In
+            </Link>
+          </div>
+        )}
+
+        {/* Form Container */}
+        <div className="bg-white shadow-xl rounded-3xl p-8 border border-slate-100">
+          {/* Role Selection Tabs */}
+          <div className="mb-6">
+            <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">
+              Select Public Account Role
+            </label>
+            <div className="grid grid-cols-2 gap-2 bg-slate-100 p-1.5 rounded-2xl">
+              <button
+                type="button"
+                onClick={() => { setSelectedRole('citizen'); setErrors({}); }}
+                className={`flex items-center justify-center space-x-2 py-2.5 rounded-xl text-xs font-bold transition-all ${
+                  selectedRole === 'citizen'
+                    ? 'bg-white text-blue-700 shadow-md'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                <UserIcon className="h-4 w-4 text-blue-600" />
+                <span>Citizen Resident</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => { setSelectedRole('worker'); setErrors({}); }}
+                className={`flex items-center justify-center space-x-2 py-2.5 rounded-xl text-xs font-bold transition-all ${
+                  selectedRole === 'worker'
+                    ? 'bg-white text-green-700 shadow-md'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                <HardHat className="h-4 w-4 text-green-600" />
+                <span>Sanitation Worker</span>
+              </button>
+            </div>
+
+            {/* Municipal Authority Role Guard Notice */}
+            <div className="mt-3 flex items-center space-x-2 bg-slate-50 border border-slate-200 px-3 py-2 rounded-xl text-[11px] text-slate-500">
+              <Building2 className="h-4 w-4 text-slate-400 flex-shrink-0" />
+              <span>
+                <strong>Municipal Authority</strong> accounts are restricted and provisioned solely by municipal headquarters.
+              </span>
+            </div>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-4">
             {errors.general && (
-              <div className="flex items-center space-x-2 text-red-600 bg-red-50 p-3 rounded-lg">
-                <AlertCircle className="h-5 w-5" />
-                <span className="text-sm">{errors.general}</span>
+              <div className="flex items-center space-x-2 text-red-600 bg-red-50 p-3 rounded-xl border border-red-200 text-xs">
+                <AlertCircle className="h-4 w-4 flex-shrink-0" />
+                <span>{errors.general}</span>
               </div>
             )}
 
+            {/* Full Name */}
             <div>
-              <label htmlFor="fullName" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="fullName" className="block text-xs font-semibold text-gray-700 mb-1">
                 Full Name
               </label>
-              <input
-                id="fullName"
-                name="fullName"
-                type="text"
-                required
-                className={`w-full px-3 py-3 border rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 transition-colors ${
-                  errors.fullName
-                    ? 'border-red-300 focus:ring-red-500 focus:border-red-500'
-                    : 'border-gray-300 focus:ring-green-500 focus:border-green-500'
-                }`}
-                placeholder="Enter your full name"
-                value={formData.fullName}
-                onChange={handleChange}
-              />
-              {errors.fullName && <p className="mt-1 text-sm text-red-600">{errors.fullName}</p>}
+              <div className="relative">
+                <input
+                  id="fullName"
+                  name="fullName"
+                  type="text"
+                  required
+                  className={`w-full px-3.5 py-2.5 pl-10 border rounded-xl shadow-sm text-sm placeholder-gray-400 focus:outline-none focus:ring-2 transition-colors ${
+                    errors.fullName
+                      ? 'border-red-300 focus:ring-red-500'
+                      : 'border-gray-300 focus:ring-teal-500'
+                  }`}
+                  placeholder="e.g. Ramesh Patel"
+                  value={formData.fullName}
+                  onChange={handleChange}
+                />
+                <UserIcon className="h-4 w-4 text-gray-400 absolute left-3.5 top-3" />
+              </div>
+              {errors.fullName && <p className="mt-1 text-xs text-red-600">{errors.fullName}</p>}
             </div>
 
+            {/* Email Address */}
             <div>
-              <label htmlFor="workerId" className="block text-sm font-medium text-gray-700 mb-2">
-                Worker ID
+              <label htmlFor="email" className="block text-xs font-semibold text-gray-700 mb-1">
+                Official / Personal Email
               </label>
-              <input
-                id="workerId"
-                name="workerId"
-                type="text"
-                required
-                className={`w-full px-3 py-3 border rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 transition-colors ${
-                  errors.workerId
-                    ? 'border-red-300 focus:ring-red-500 focus:border-red-500'
-                    : 'border-gray-300 focus:ring-green-500 focus:border-green-500'
-                }`}
-                placeholder="e.g., SW-103"
-                value={formData.workerId}
-                onChange={handleChange}
-              />
-              {errors.workerId && <p className="mt-1 text-sm text-red-600">{errors.workerId}</p>}
+              <div className="relative">
+                <input
+                  id="email"
+                  name="email"
+                  type="email"
+                  required
+                  className={`w-full px-3.5 py-2.5 pl-10 border rounded-xl shadow-sm text-sm placeholder-gray-400 focus:outline-none focus:ring-2 transition-colors ${
+                    errors.email
+                      ? 'border-red-300 focus:ring-red-500'
+                      : 'border-gray-300 focus:ring-teal-500'
+                  }`}
+                  placeholder="name@example.com"
+                  value={formData.email}
+                  onChange={handleChange}
+                />
+                <Mail className="h-4 w-4 text-gray-400 absolute left-3.5 top-3" />
+              </div>
+              {errors.email && <p className="mt-1 text-xs text-red-600">{errors.email}</p>}
             </div>
 
-            <div>
-              <label htmlFor="mobile" className="block text-sm font-medium text-gray-700 mb-2">
-                Mobile Number
-              </label>
-              <input
-                id="mobile"
-                name="mobile"
-                type="tel"
-                required
-                className={`w-full px-3 py-3 border rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 transition-colors ${
-                  errors.mobile
-                    ? 'border-red-300 focus:ring-red-500 focus:border-red-500'
-                    : 'border-gray-300 focus:ring-green-500 focus:border-green-500'
-                }`}
-                placeholder="+91-9876543210"
-                value={formData.mobile}
-                onChange={handleChange}
-              />
-              {errors.mobile && <p className="mt-1 text-sm text-red-600">{errors.mobile}</p>}
+            {/* Sanitation Worker ID Field (Only if Worker role selected) */}
+            {selectedRole === 'worker' && (
+              <div>
+                <label htmlFor="workerId" className="block text-xs font-semibold text-gray-700 mb-1">
+                  Worker Employee ID
+                </label>
+                <div className="relative">
+                  <input
+                    id="workerId"
+                    name="workerId"
+                    type="text"
+                    required
+                    className={`w-full px-3.5 py-2.5 pl-10 border rounded-xl shadow-sm text-sm placeholder-gray-400 focus:outline-none focus:ring-2 transition-colors ${
+                      errors.workerId
+                        ? 'border-red-300 focus:ring-red-500'
+                        : 'border-gray-300 focus:ring-teal-500'
+                    }`}
+                    placeholder="e.g. SW-105"
+                    value={formData.workerId}
+                    onChange={handleChange}
+                  />
+                  <HardHat className="h-4 w-4 text-gray-400 absolute left-3.5 top-3" />
+                </div>
+                {errors.workerId && <p className="mt-1 text-xs text-red-600">{errors.workerId}</p>}
+              </div>
+            )}
+
+            {/* Mobile Number & Zone */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label htmlFor="mobile" className="block text-xs font-semibold text-gray-700 mb-1">
+                  Mobile Number
+                </label>
+                <div className="relative">
+                  <input
+                    id="mobile"
+                    name="mobile"
+                    type="tel"
+                    required
+                    className={`w-full px-3.5 py-2.5 pl-9 border rounded-xl shadow-sm text-sm placeholder-gray-400 focus:outline-none focus:ring-2 transition-colors ${
+                      errors.mobile
+                        ? 'border-red-300 focus:ring-red-500'
+                        : 'border-gray-300 focus:ring-teal-500'
+                    }`}
+                    placeholder="9876543210"
+                    value={formData.mobile}
+                    onChange={handleChange}
+                  />
+                  <Phone className="h-3.5 w-3.5 text-gray-400 absolute left-3 top-3.5" />
+                </div>
+                {errors.mobile && <p className="mt-1 text-xs text-red-600">{errors.mobile}</p>}
+              </div>
+
+              <div>
+                <label htmlFor="zone" className="block text-xs font-semibold text-gray-700 mb-1">
+                  Assigned Zone
+                </label>
+                <div className="relative">
+                  <select
+                    id="zone"
+                    name="zone"
+                    value={formData.zone}
+                    onChange={handleChange}
+                    className="w-full px-3.5 py-2.5 pl-9 border border-gray-300 rounded-xl shadow-sm text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 bg-white"
+                  >
+                    <option value="Sector A">Sector A</option>
+                    <option value="Sector B">Sector B</option>
+                    <option value="Sector C">Sector C</option>
+                    <option value="Sector D">Sector D</option>
+                    <option value="Sector E">Sector E</option>
+                  </select>
+                  <MapPin className="h-3.5 w-3.5 text-gray-400 absolute left-3 top-3.5" />
+                </div>
+              </div>
             </div>
 
+            {/* Password */}
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="password" className="block text-xs font-semibold text-gray-700 mb-1">
                 Password
               </label>
               <div className="relative">
@@ -213,32 +378,34 @@ const SignUp: React.FC = () => {
                   name="password"
                   type={showPassword ? 'text' : 'password'}
                   required
-                  className={`w-full px-3 py-3 pr-12 border rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 transition-colors ${
+                  className={`w-full px-3.5 py-2.5 pl-10 pr-10 border rounded-xl shadow-sm text-sm placeholder-gray-400 focus:outline-none focus:ring-2 transition-colors ${
                     errors.password
-                      ? 'border-red-300 focus:ring-red-500 focus:border-red-500'
-                      : 'border-gray-300 focus:ring-green-500 focus:border-green-500'
+                      ? 'border-red-300 focus:ring-red-500'
+                      : 'border-gray-300 focus:ring-teal-500'
                   }`}
-                  placeholder="Create a strong password"
+                  placeholder="Minimum 6 characters"
                   value={formData.password}
                   onChange={handleChange}
                 />
+                <Lock className="h-4 w-4 text-gray-400 absolute left-3.5 top-3" />
                 <button
                   type="button"
                   className="absolute inset-y-0 right-0 flex items-center pr-3"
                   onClick={() => setShowPassword(!showPassword)}
                 >
                   {showPassword ? (
-                    <EyeOff className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+                    <EyeOff className="h-4 w-4 text-gray-400 hover:text-gray-600" />
                   ) : (
-                    <Eye className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+                    <Eye className="h-4 w-4 text-gray-400 hover:text-gray-600" />
                   )}
                 </button>
               </div>
-              {errors.password && <p className="mt-1 text-sm text-red-600">{errors.password}</p>}
+              {errors.password && <p className="mt-1 text-xs text-red-600">{errors.password}</p>}
             </div>
 
+            {/* Confirm Password */}
             <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">
+              <label htmlFor="confirmPassword" className="block text-xs font-semibold text-gray-700 mb-1">
                 Confirm Password
               </label>
               <div className="relative">
@@ -247,59 +414,62 @@ const SignUp: React.FC = () => {
                   name="confirmPassword"
                   type={showConfirmPassword ? 'text' : 'password'}
                   required
-                  className={`w-full px-3 py-3 pr-12 border rounded-lg shadow-sm placeholder-gray-400 focus:outline-none focus:ring-2 transition-colors ${
+                  className={`w-full px-3.5 py-2.5 pl-10 pr-10 border rounded-xl shadow-sm text-sm placeholder-gray-400 focus:outline-none focus:ring-2 transition-colors ${
                     errors.confirmPassword
-                      ? 'border-red-300 focus:ring-red-500 focus:border-red-500'
-                      : 'border-gray-300 focus:ring-green-500 focus:border-green-500'
+                      ? 'border-red-300 focus:ring-red-500'
+                      : 'border-gray-300 focus:ring-teal-500'
                   }`}
-                  placeholder="Confirm your password"
+                  placeholder="Re-type your password"
                   value={formData.confirmPassword}
                   onChange={handleChange}
                 />
+                <Lock className="h-4 w-4 text-gray-400 absolute left-3.5 top-3" />
                 <button
                   type="button"
                   className="absolute inset-y-0 right-0 flex items-center pr-3"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                 >
                   {showConfirmPassword ? (
-                    <EyeOff className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+                    <EyeOff className="h-4 w-4 text-gray-400 hover:text-gray-600" />
                   ) : (
-                    <Eye className="h-5 w-5 text-gray-400 hover:text-gray-600" />
+                    <Eye className="h-4 w-4 text-gray-400 hover:text-gray-600" />
                   )}
                 </button>
               </div>
-              {errors.confirmPassword && <p className="mt-1 text-sm text-red-600">{errors.confirmPassword}</p>}
+              {errors.confirmPassword && (
+                <p className="mt-1 text-xs text-red-600">{errors.confirmPassword}</p>
+              )}
             </div>
 
+            {/* Submit Button */}
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-gradient-to-r from-green-500 to-blue-600 hover:from-green-600 hover:to-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+              className={`w-full flex items-center justify-center space-x-2 py-3 px-4 rounded-xl text-sm font-bold text-white shadow-lg transition-all ${
+                isLoading
+                  ? 'bg-slate-400 cursor-not-allowed'
+                  : selectedRole === 'citizen'
+                    ? 'bg-gradient-to-r from-blue-600 to-teal-600 hover:from-blue-700 hover:to-teal-700'
+                    : 'bg-gradient-to-r from-green-600 to-teal-600 hover:from-green-700 hover:to-teal-700'
+              }`}
             >
               {isLoading ? (
-                <div className="flex items-center space-x-2">
-                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
                   <span>Creating Account...</span>
-                </div>
+                </>
               ) : (
-                <div className="flex items-center space-x-2">
-                  <CheckCircle className="h-4 w-4" />
-                  <span>Create Account</span>
-                </div>
+                <span>Register with Supabase</span>
               )}
             </button>
           </form>
 
-          <div className="mt-6 text-center">
-            <p className="text-sm text-gray-600">
-              Already have an account?{' '}
-              <Link 
-                to="/login" 
-                className="font-medium text-green-600 hover:text-green-500 transition-colors"
-              >
-                Sign in here
-              </Link>
-            </p>
+          {/* Links */}
+          <div className="mt-6 text-center text-xs text-gray-600">
+            Already have an account?{' '}
+            <Link to="/login" className="font-bold text-teal-600 hover:text-teal-700 underline">
+              Sign In
+            </Link>
           </div>
         </div>
       </div>

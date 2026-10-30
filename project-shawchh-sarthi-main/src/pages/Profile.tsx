@@ -17,21 +17,45 @@ import {
 } from 'lucide-react';
 
 const Profile: React.FC = () => {
-  const { user } = useAuth();
+  const { user, updateUserProfile } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [editedUser, setEditedUser] = useState(user);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveMessage, setSaveMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   if (!user) return null;
 
   const handleEdit = () => {
     setEditedUser(user);
+    setSaveMessage(null);
     setIsEditing(true);
   };
 
-  const handleSave = () => {
-    // In a real app, this would update the user in the database
-    setIsEditing(false);
-    // You would call an update function here
+  const handleSave = async () => {
+    if (!editedUser) return;
+    setIsSaving(true);
+    setSaveMessage(null);
+
+    try {
+      const result = await updateUserProfile({
+        fullName: editedUser.fullName,
+        mobile: editedUser.mobile,
+        zone: editedUser.zone,
+        healthStatus: editedUser.healthStatus
+      });
+
+      if (result.success) {
+        setIsEditing(false);
+        setSaveMessage({ type: 'success', text: 'Profile updated successfully in Supabase database.' });
+        setTimeout(() => setSaveMessage(null), 4000);
+      } else {
+        setSaveMessage({ type: 'error', text: result.error || 'Failed to update profile.' });
+      }
+    } catch (err: unknown) {
+      setSaveMessage({ type: 'error', text: (err as Error)?.message || 'Error saving profile.' });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleCancel = () => {
@@ -85,6 +109,19 @@ const Profile: React.FC = () => {
         </div>
       </div>
 
+      {saveMessage && (
+        <div className={`p-4 rounded-xl flex items-center space-x-2 text-sm shadow-sm ${
+          saveMessage.type === 'success' ? 'bg-green-50 text-green-800 border border-green-200' : 'bg-red-50 text-red-800 border border-red-200'
+        }`}>
+          {saveMessage.type === 'success' ? (
+            <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0" />
+          ) : (
+            <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0" />
+          )}
+          <span>{saveMessage.text}</span>
+        </div>
+      )}
+
       <div className="grid lg:grid-cols-3 gap-6">
         {/* Personal Information */}
         <div className="lg:col-span-2 bg-white rounded-xl shadow-lg border border-gray-100">
@@ -103,13 +140,15 @@ const Profile: React.FC = () => {
                 <div className="flex space-x-2">
                   <button
                     onClick={handleSave}
-                    className="flex items-center space-x-2 bg-green-600 text-white px-3 py-1 rounded-md hover:bg-green-700 transition-colors"
+                    disabled={isSaving}
+                    className="flex items-center space-x-2 bg-green-600 text-white px-3 py-1 rounded-md hover:bg-green-700 transition-colors disabled:opacity-50"
                   >
                     <Save className="h-4 w-4" />
-                    <span className="text-sm">Save</span>
+                    <span className="text-sm">{isSaving ? 'Saving...' : 'Save'}</span>
                   </button>
                   <button
                     onClick={handleCancel}
+                    disabled={isSaving}
                     className="flex items-center space-x-2 bg-gray-600 text-white px-3 py-1 rounded-md hover:bg-gray-700 transition-colors"
                   >
                     <X className="h-4 w-4" />

@@ -1,16 +1,16 @@
 import React, { useState } from 'react';
-import { addIssue } from '../data/mockData';
+import { submitComplaint } from '../services/complaintService';
+import { uploadImage } from '../services/storageService';
 import { useAuth } from '../context/AuthContext';
-import { Issue } from '../types';
+import { CitizenReport } from '../types';
 import { 
   AlertTriangle, 
-  Camera, 
   CheckCircle, 
   X, 
-  Upload,
-  MapPin,
-  Clock,
-  Flag
+  Upload, 
+  MapPin, 
+  Clock, 
+  Flag 
 } from 'lucide-react';
 
 const ReportIssue: React.FC = () => {
@@ -103,17 +103,26 @@ const ReportIssue: React.FC = () => {
     setIsSubmitting(true);
 
     try {
-      const newIssue: Issue = {
-        id: Date.now().toString(),
-        workerId: user?.workerId || '',
-        title: formData.title,
-        description: formData.description,
-        category: formData.category,
-        timestamp: new Date().toISOString(),
-        photo: imagePreview || undefined
-      };
+      let photoUrl: string | undefined = imagePreview || undefined;
 
-      addIssue(newIssue);
+      // Upload image to Supabase Storage if file is selected
+      if (selectedImage) {
+        const uploadRes = await uploadImage(selectedImage, 'grievances');
+        if (uploadRes.success && uploadRes.url) {
+          photoUrl = uploadRes.url;
+        }
+      }
+
+      await submitComplaint({
+        citizenId: user?.id,
+        citizenName: user?.fullName || 'Field Worker',
+        citizenMobile: user?.mobile || '',
+        location: user?.zone ? `${user.zone} Field Area` : 'General Sector',
+        zone: user?.zone || 'Sector A',
+        issueType: (formData.category === 'bin-full' ? 'overflowing-bin' : 'other') as CitizenReport['issueType'],
+        description: `[${formData.title}] ${formData.description}`,
+        photo: photoUrl,
+      });
 
       // Show success state
       setIsSubmitted(true);
@@ -126,7 +135,7 @@ const ReportIssue: React.FC = () => {
         setIsSubmitted(false);
       }, 3000);
 
-    } catch (error) {
+    } catch {
       setErrors({ general: 'Failed to submit issue. Please try again.' });
     } finally {
       setIsSubmitting(false);

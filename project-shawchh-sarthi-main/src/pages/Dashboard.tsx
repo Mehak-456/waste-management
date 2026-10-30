@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { getTasksForUser, updateTaskStatus } from '../data/mockData';
+import { getTasks, updateTask, completeTaskAndLogRecord } from '../services/taskService';
 import { Task } from '../types';
 import MapComponent from '../components/MapComponent';
 import { 
@@ -11,7 +11,8 @@ import {
   Award,
   Target,
   Users,
-  Zap
+  Zap,
+  Loader2
 } from 'lucide-react';
 
 const Dashboard: React.FC = () => {
@@ -19,15 +20,21 @@ const Dashboard: React.FC = () => {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
   const [loading, setLoading] = useState<{ [key: string]: boolean }>({});
+  const [isLoadingTasks, setIsLoadingTasks] = useState<boolean>(true);
 
   useEffect(() => {
-    const loadTasks = () => {
-      const userTasks = getTasksForUser();
-      setTasks(userTasks);
+    const loadTasks = async () => {
+      setIsLoadingTasks(true);
+      try {
+        const { data } = await getTasks(user?.id);
+        setTasks(data);
+      } finally {
+        setIsLoadingTasks(false);
+      }
     };
 
     loadTasks();
-  }, []);
+  }, [user?.id]);
 
   const completedTasks = tasks.filter(task => task.status === 'completed').length;
   const totalTasks = tasks.length;
@@ -55,7 +62,7 @@ const Dashboard: React.FC = () => {
       ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
 
       // 3. Get GPS location
-      navigator.geolocation.getCurrentPosition((pos) => {
+      navigator.geolocation.getCurrentPosition(async (pos) => {
         const { latitude, longitude } = pos.coords;
         const timestamp = new Date().toLocaleString();
 
@@ -73,7 +80,7 @@ const Dashboard: React.FC = () => {
 
         if (step === "before") {
           // First capture
-          updateTaskStatus(taskId, "in-progress", undefined, proofImage);
+          updateTask(taskId, "in-progress", undefined, proofImage);
           setTasks(prev =>
             prev.map(task =>
               task.id === taskId
@@ -82,9 +89,16 @@ const Dashboard: React.FC = () => {
             )
           );
         } else {
-          // Final capture
+          // Final capture: update task & log immutable collection record
           const weight = Math.floor(Math.random() * 30) + 10;
-          updateTaskStatus(taskId, "completed", weight, undefined, proofImage);
+          await completeTaskAndLogRecord(
+            taskId, 
+            user?.id || 'worker-user', 
+            weight, 
+            undefined, 
+            proofImage,
+            'Verified route collection via worker camera & GPS overlay.'
+          );
           setTasks(prev =>
             prev.map(task =>
               task.id === taskId
@@ -234,7 +248,21 @@ const Dashboard: React.FC = () => {
           </div>
 
           <div className="max-h-96 overflow-y-auto">
-            {tasks.map((task) => (
+            {isLoadingTasks ? (
+              <div className="p-8 text-center text-slate-500 space-y-2">
+                <Loader2 className="h-6 w-6 animate-spin mx-auto text-teal-600" />
+                <p className="text-xs font-medium">Loading collection route points...</p>
+              </div>
+            ) : tasks.length === 0 ? (
+              <div className="p-8 text-center text-slate-500 space-y-2">
+                <CheckCircle className="h-8 w-8 text-green-500 mx-auto" />
+                <p className="text-sm font-bold text-slate-800">No Collection Stops Scheduled</p>
+                <p className="text-xs text-slate-500 max-w-xs mx-auto leading-relaxed">
+                  All assigned collection route stops are completed or no new stops have been dispatched for your sector today.
+                </p>
+              </div>
+            ) : (
+              tasks.map((task) => (
               <div 
                 key={task.id}
                 className={`p-4 border-b border-gray-100 hover:bg-gray-50 cursor-pointer transition-colors ${
@@ -321,7 +349,7 @@ const Dashboard: React.FC = () => {
                   </div>
                 </div>
               </div>
-            ))}
+            )))}
           </div>
         </div>
       </div>

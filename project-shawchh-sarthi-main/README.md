@@ -1,398 +1,281 @@
-# Swachh Seva - Municipal Waste Management Worker Platform
-
-## 🌟 Project Overview
-
-**Swachh Seva** (meaning "Clean Service" in Hindi) is a comprehensive digital platform designed to revolutionize municipal waste management operations. This system empowers sanitation workers employed by municipal corporations to efficiently track, report, and showcase their work to authorities, ensuring proper wage distribution, performance-based increments, and transparent accountability.
-
-## 🎯 Project Vision
-
-To create a transparent, accountable, and efficient waste management ecosystem where every sanitation worker's contribution is recognized, tracked, and fairly compensated by municipal authorities through digital verification and performance analytics.
-
-## 👥 Target Users
-
-### Primary Users:
-- **Sanitation Workers** - Municipal corporation employees engaged in waste collection
-- **Field Supervisors** - Team leaders and zone managers  
-- **Municipal Authorities** - Officials responsible for wage disbursement and performance evaluation
-
-### Secondary Users:
-- **HR Department** - Employee management and increment processing
-- **Finance Department** - Wage calculation and disbursement
-- **Public Health Officials** - Monitoring sanitation standards
-- **Citizens** - Improved service delivery and transparency
-
-## 🚀 Key Features
-
-### 📱 For Sanitation Workers
-
-#### 1. **Digital Work Tracking & Verification**
-- **GPS-Based Route Tracking**: Real-time location monitoring during collection rounds
-- **Photo Proof System**: Before/after collection photos with GPS coordinates and timestamps
-- **Weight Recording**: Digital measurement tracking for collected waste
-- **Task Completion Verification**: Two-step verification process (capture before → capture after)
-
-#### 2. **Performance Dashboard & Analytics**
-- **Personal Metrics**: Individual performance tracking and analytics
-- **Progress Visualization**: Weekly/monthly collection statistics with charts
-- **Leaderboard Ranking**: Competitive element among peers
-- **Achievement System**: Badges and recognition for milestones
-
-#### 3. **Training & Development Hub**
-- **Video-Based Learning**: 4 comprehensive training modules covering:
-  - Safety protocols and equipment usage (1:32 + 6:15 mins)
-  - Efficient collection techniques (12:45 mins)
-  - Emergency response procedures (10:20 mins)
-- **Skill Certification**: Progress tracking and competency validation
-- **Safety Guidelines**: Essential safety rules reference
-
-#### 4. **Issue Reporting System**
-- **Real-Time Reporting**: Report overflowing bins, equipment malfunctions, safety hazards
-- **Photo Documentation**: Visual evidence with issue reports
-- **Category Classification**: Structured issue types (bin-full, access-blocked, hazard-safety, equipment-issue)
-- **Tracking System**: Unique ID assignment for each reported issue
-
-#### 5. **Health & Safety Monitoring**
-- **Digital Health Records**: Checkup history and status tracking
-- **Safety Compliance**: Equipment usage verification
-- **Emergency Contacts**: Direct access to emergency hotlines
-
-### 🏛️ For Municipal Authorities
-
-#### 1. **Performance Analytics & Reporting**
-- **Individual Worker Reports**: Detailed performance metrics per worker
-- **Team Productivity Analysis**: Zone-wise and team-wise efficiency tracking
-- **Collection Analytics**: Volume, weight, and route optimization data
-- **Real-Time Monitoring**: Live tracking of field operations
-
-#### 2. **Transparent Wage Management**
-```
-Automated Wage Calculation Formula:
-Base Wage + Performance Bonus + Quality Bonus + Efficiency Bonus
-
-Where:
-- Performance Bonus = (Collections Completed / Target) × Bonus Rate
-- Quality Bonus = Photo Verification Score × Quality Rate  
-- Efficiency Bonus = Route Completion Time Bonus
-```
-
-#### 3. **Increment & Promotion System**
-| Criteria | Weight | Measurement Method |
-|----------|---------|-------------------|
-| Task Completion Rate | 30% | Daily target achievement tracking |
-| Quality Score | 25% | Photo verification & GPS accuracy |
-| Training Completion | 20% | Skill development progress |
-| Attendance & Punctuality | 15% | Login/logout tracking |
-| Safety Compliance | 10% | Health checkups & protocol adherence |
-
-#### 4. **Resource Optimization**
-- **Route Planning**: AI-assisted optimal route generation
-- **Vehicle Allocation**: Equipment and workforce distribution
-- **Budget Forecasting**: Cost analysis and resource planning
-- **Issue Resolution Tracking**: Problem identification and resolution metrics
-
-## 🛠️ Technical Architecture
-
-### Frontend Stack
-- **Framework**: React 18.3.1 with TypeScript
-- **Styling**: Tailwind CSS 3.4.1 for responsive design
-- **Routing**: React Router DOM 7.9.1 for navigation
-- **Charts**: Recharts 3.2.0 for performance visualization
-- **Maps**: Leaflet 1.9.4 for GPS tracking and route visualization
-- **Icons**: Lucide React 0.344.0 for consistent iconography
-- **Build Tool**: Vite 7.1.5 for fast development and building
-
-### Key Libraries & Dependencies
-```json
-{
-  "react": "^18.3.1",
-  "react-dom": "^18.3.1", 
-  "react-router-dom": "^7.9.1",
-  "recharts": "^3.2.0",
-  "leaflet": "^1.9.4",
-  "lucide-react": "^0.344.0",
-  "tailwindcss": "^3.4.1"
-}
-```
-
-### Data Architecture
-
-#### User Management System
-```typescript
-interface User {
-  id: string;
-  fullName: string;
-  workerId: string;        // Format: SW-XXX
-  mobile: string;
-  password: string;
-  team: string;           // Team A, B, C
-  zone: string;           // Sector assignment
-  joinDate: string;
-  lastCheckup: string;
-  healthStatus: string;
-}
-```
-
-#### Task Tracking System
-```typescript
-interface Task {
-  id: string;
-  routeName: string;
-  location: string;
-  status: 'pending' | 'in-progress' | 'completed';
-  lat: number;            // GPS coordinates
-  lng: number;
-  weight?: number;        // Collected weight in kg
-  proofBefore?: string;   // Photo before collection
-  proofAfter?: string;    // Photo after collection
-}
-```
-
-#### Issue Management System
-```typescript
-interface Issue {
-  id: string;
-  workerId: string;
-  title: string;
-  description: string;
-  category: string;
-  timestamp: string;
-  photo?: string;
-}
-```
-
-## 📊 Mock Data & Demo Content
-
-### Worker Database (5 Active Workers)
-- **Rajesh Kumar** (SW-101) - Team A, Sector A - 132 collections, 1320 points
-- **Priya Sharma** (SW-102) - Team B, Sector B - 128 collections, 1280 points
-- **Amit Singh** (SW-103) - Team A, Sector C - 145 collections, 1450 points (Top Performer)
-- **Sunita Devi** (SW-104) - Team B, Sector D
-- **Vikram Yadav** (SW-105) - Team C, Sector E
-
-### Performance Metrics
-- **Weekly Collections**: 117 total tasks across 7 days
-- **Total Waste Collected**: 948 kg
-- **Peak Performance Day**: Saturday (22 collections, 180kg)
-- **Average Daily Collections**: 16.7 tasks
-- **Top Performer**: Amit Singh with 145 collections
-
-### Collection Routes & GPS Coordinates
-- **Route 1: Sector A Collection** (Delhi NCR coordinates)
-- **Green Park Main Gate**: 28.5494°N, 77.2066°E ✅ Completed (25kg)
-- **Community Center Block A**: 28.5504°N, 77.2076°E ✅ Completed (18kg)
-- **Market Complex**: 28.5524°N, 77.2096°E ⏳ Pending
-- **Residential Area Phase 1**: 28.5534°N, 77.2106°E ⏳ Pending
-- **School Compound**: 28.5544°N, 77.2116°E ⏳ Pending
-
-### Training Resources
-- **4 Training Videos** with external CDN hosting
-- **Total Duration**: 30+ minutes of educational content
-- **Categories**: Safety (50%), Efficiency (25%), Emergency (25%)
-- **Hosted on**: Cloudinary video platform
-
-## 🔐 Authentication & Security
-
-### Login System
-- **Demo Credentials**: 
-  - Worker 1: `SW-101` / `password123`
-  - Worker 2: `SW-102` / `password123`
-  - Worker 3: `SW-103` / `password123`
-- **Session Management**: Local storage with persistent login
-- **Role-Based Access**: Protected routes for authenticated users only
-
-### Data Security
-- GPS data with timestamp verification
-- Photo evidence with location stamps
-- Secure user authentication
-- Protected API endpoints (when implemented)
-
-## 💰 Wage & Incentive System
-
-### How It Ensures Fair Compensation
-
-#### 1. **100% Transparent Work Verification**
-```
-Photo Evidence Chain:
-├── Before Collection (GPS + Timestamp)
-├── During Collection (Weight Verification)
-├── After Collection (GPS + Timestamp)
-└── Automatic Report Generation
-```
-
-#### 2. **Performance-Based Rewards**
-- **Green Coins System**: Digital currency for achievements
-- **Monthly Targets**: 100 collections goal with progress tracking
-- **Weight Targets**: 800kg monthly collection goals
-- **Bonus Structure**: ₹1,200+ monthly earning potential
-
-#### 3. **Career Advancement Tracking**
-- **Skill Development**: Training completion certificates
-- **Safety Compliance**: Health checkup and equipment usage
-- **Leadership Potential**: Team ranking and peer recognition
-- **Consistency Rewards**: Streak tracking and attendance bonuses
-
-## 🎯 Benefits & Impact
-
-### For Sanitation Workers:
-- ✅ **Fair Wage Distribution** based on verified actual work
-- ✅ **Clear Career Path** with skill-based advancement
-- ✅ **Safety & Training** with comprehensive resources
-- ✅ **Recognition System** with achievements and rankings
-- ✅ **Digital Documentation** for dispute resolution
-
-### For Municipal Authorities:
-- ✅ **Complete Operational Visibility** with real-time tracking
-- ✅ **Data-Driven Decisions** with analytics and reporting
-- ✅ **Automated Compliance** with photo verification
-- ✅ **Cost Optimization** through route and resource planning
-- ✅ **Quality Assurance** with systematic monitoring
-
-### For Citizens:
-- ✅ **Improved Service Quality** with consistent collection
-- ✅ **Cleaner Neighborhoods** through efficient operations
-- ✅ **Transparent Municipal Operations** with accountability
-- ✅ **Quick Issue Resolution** through direct reporting
-
-## 🚀 Getting Started
-
-### Prerequisites
-- Node.js 18+ and npm/yarn
-- Modern web browser with camera access
-- GPS/location services enabled
-
-### Installation
-```bash
-# Clone the repository
-git clone <repository-url>
-cd project-shawchh-sarthi
-
-# Install dependencies
-npm install
-
-# Start development server
-npm run dev
-
-# Build for production
-npm run build
-
-# Preview production build
-npm run preview
-```
-
-### Demo Access
-1. Navigate to the login page
-2. Use demo credentials: `SW-101` / `password123`
-3. Explore the dashboard and features
-4. Test camera functionality for task completion
-5. View performance analytics and training modules
-
-## 📱 Core User Flows
-
-### 1. Daily Work Flow
-```
-Login → Dashboard → View Route → Navigate to Location → 
-Capture Before Photo → Complete Collection → Capture After Photo → 
-Weight Recording → Task Marked Complete → Performance Updated
-```
-
-### 2. Issue Reporting Flow
-```
-Report Issue → Select Category → Add Description → 
-Upload Photo (Optional) → Submit → Receive Tracking ID → 
-Authority Notification → Resolution Tracking
-```
-
-### 3. Training Flow
-```
-Access Training → Browse Categories → Select Video → 
-Complete Module → Progress Tracking → Skill Certification
-```
-
-## 🎨 UI/UX Features
-
-### Design System
-- **Color Scheme**: Green-to-blue gradient representing cleanliness and trust
-- **Typography**: Clean, readable fonts optimized for mobile devices
-- **Icons**: Consistent Lucide React icon library
-- **Responsive**: Mobile-first design with tablet and desktop optimization
-
-### Interactive Elements
-- **Camera Integration**: Native browser camera access for photo capture
-- **GPS Integration**: Real-time location tracking and mapping
-- **Progress Animations**: Visual feedback for task completion
-- **Chart Visualization**: Interactive performance analytics
-- **Modal Systems**: Video player and form overlays
-
-## 🔄 Future Enhancements
-
-### Phase 1 (Current)
-- ✅ Core worker dashboard
-- ✅ Task tracking with photo verification
-- ✅ Performance analytics
-- ✅ Training modules
-- ✅ Issue reporting system
-
-### Phase 2 (Planned)
-- 🔄 Supervisor dashboard for team management
-- 🔄 Real-time notifications and alerts
-- 🔄 Advanced route optimization with AI
-- 🔄 Integration with municipal ERP systems
-- 🔄 Multi-language support (Hindi, English, local languages)
-
-### Phase 3 (Future)
-- 🔄 Citizen complaint integration
-- 🔄 IoT sensor integration for smart bins
-- 🔄 Blockchain verification for transparency
-- 🔄 Machine learning for predictive maintenance
-- 🔄 Advanced analytics and business intelligence
-
-## 📞 Support & Documentation
-
-### Technical Support
-- **Development Issues**: Check browser console for errors
-- **Camera Access**: Ensure HTTPS and permission grants
-- **GPS Issues**: Verify location services are enabled
-- **Performance**: Use modern browsers (Chrome, Firefox, Safari)
-
-### Training Resources
-- Video tutorials embedded in the platform
-- Safety guidelines reference documentation
-- Emergency contact information
-- User manual and FAQ section
-
-## 🏆 Recognition & Awards
-
-This platform represents a significant step toward:
-- **Digital India Initiative** compliance
-- **Swachh Bharat Mission** technology support
-- **UN Sustainable Development Goals** alignment
-- **Smart City** infrastructure development
-
-## 📄 License & Credits
-
-### License
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-**Copyright (c) 2025 Sumit Chaubey and Vishnu Jaiswal**
-
-### Technology Credits
-- React.js ecosystem for robust frontend development
-- Leaflet for interactive mapping capabilities
-- Recharts for data visualization
-- Tailwind CSS for responsive design
-- Cloudinary for media hosting
-- ImageKit for image optimization
-
-### Image & Media Sources
-- Pexels for stock photography
-- Cloudinary for video hosting
-- Custom photography for proof-of-work images
-- Icon library from Lucide React
+# Swachh Seva - Smart Municipal Solid Waste Management Platform
+
+[![Node.js Version](https://img.shields.io/badge/Node.js-%3E%3D18.0.0-green.svg)](https://nodejs.org/)
+[![Vite](https://img.shields.io/badge/Vite-7.1.5-blueviolet.svg)](https://vitejs.dev/)
+[![React](https://img.shields.io/badge/React-18.3.1-blue.svg)](https://react.dev/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.5.3-blue.svg)](https://www.typescriptlang.org/)
+[![Supabase](https://img.shields.io/badge/Database-Supabase%20PostgreSQL-3ECF8E.svg)](https://supabase.com/)
+[![License](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
 ---
 
-**Swachh Seva** - Empowering sanitation workers through technology for a cleaner, more transparent future. 🌱
+## 🌟 1. Project Overview
 
-*Last Updated: September 29, 2025*#   w a s t e - m a n a g e m e n t  
- #   w a s t e - m a n a g e m e n t  
- 
+**Swachh Seva** (*"Clean Service"*) is a full-stack municipal solid waste management and civic accountability platform built for Indian urban local bodies and municipal corporations.
+
+The application connects three essential stakeholders into a unified operational workflow:
+1. **Citizens**: File geo-tagged waste grievances, upload photographic evidence, track complaint resolution status with before/after photos, and vote on neighborhood cleanliness scorecard ratings.
+2. **Sanitation Workers**: View scheduled daily collection routes, record waste tonnage weights, capture before-and-after photo verification proofs with camera overlays, and log immutable collection records.
+3. **Municipal Authorities**: Command center dashboard displaying real-time citywide cleanliness metrics, collection tasks management (creation, scheduling, cancellation), citizen grievance redressal with staff dispatch, and photographic wage incentive auditing.
+
+---
+
+## 🚀 2. Core Implemented Features
+
+### 👤 For Citizens
+- **Cleanliness Grievance Redressal**: File complaints categorized by issue type (`overflowing-bin`, `garbage-dump`, `blocked-drain`, `missed-pickup`, `other`) with descriptions, sector zone, and photographic evidence.
+- **Evidence Storage**: Images uploaded directly to Supabase Storage bucket (`waste-evidence`).
+- **Grievance Tracking**: View personal reported issues with real-time status tags (`pending`, `in-progress`, `resolved`), assigned worker details, and official municipal resolution notes accompanied by cleaned proof photos.
+- **Neighborhood Cleanliness Scorecard**: View sector/ward cleanliness ratings and submit civic cleanliness votes.
+- **Duplicate Prevention**: Buttons lock and display loading indicators during submission to prevent duplicate reports.
+
+### 👷 For Sanitation Workers
+- **Assigned Route Stops**: View daily scheduled collection route points filtered by assigned worker ID or unassigned pool tasks.
+- **Two-Step Verification**:
+  - *Start Collection*: Transition task to `in-progress` with camera photo proof.
+  - *Complete Collection*: Transition task to `completed` with collected waste weight (kg) and after-collection photo proof.
+- **Immutable Audit Logging**: Completing a task writes an immutable audit record to `collection_records`.
+- **Performance & Incentives**: View personal weekly collection charts, daily tonnage trends, incentive wage calculations, and sanitation team leaderboard standings.
+
+### 🏛️ For Municipal Authorities
+- **Executive Command Dashboard**: Real-time aggregated statistics calculated from database tables (Cleanliness Index, Waste Lifted, Registered Workforce on duty, and Pending Citizen Grievances).
+- **Collection Task Management**: Schedule new collection tasks via an interactive modal with geographic coordinates, route name, sector, and assigned worker; cancel or update task statuses.
+- **Workforce Roster**: View registered field staff queried from the `profiles` table with contact numbers, health checkup status, and assigned sector zones.
+- **Grievance Triage & Assignment**: View all sector complaints, dispatch emergency cleanup units, or assign complaints directly to registered field workers from a dropdown roster.
+- **Wage Incentive Audit**: Inspect GPS/field before-and-after photos, verify tonnage weights, and approve or flag worker wage bonuses with database persistence.
+- **Training Hub Management**: Publish new video modules (title, category, duration, streaming URL, thumbnail, learning outcomes) and manage the workforce library with delete permissions.
+
+---
+
+## 🛠️ 3. Technology Stack
+
+| Layer | Technology | Purpose |
+|---|---|---|
+| **Frontend Framework** | React 18.3.1 | Component-based interactive UI |
+| **Language** | TypeScript 5.5.3 | Static type safety and strict schema alignment |
+| **Bundler & Dev Server** | Vite 7.1.5 | Ultra-fast HMR and optimized production builds |
+| **Styling** | Tailwind CSS 3.4.1 | Responsive, utility-first design system |
+| **Routing** | React Router DOM 7.9.1 | Declarative role-protected routing |
+| **Icons** | Lucide React 0.344.0 | Modern iconography |
+| **Visual Charts** | Recharts 3.2.0 | Responsive SVG performance and weight graphs |
+| **Mapping Engine** | Leaflet 1.9.4 | Location-based marker mapping with coordinate validation |
+| **Backend & Database** | Supabase (PostgreSQL 15) | Relational database, Auth, RLS, Storage, RPC functions |
+
+---
+
+## 🏗️ 4. Application Architecture
+
+```
+                                  [ Browser / Client ]
+                                           │
+                        ┌──────────────────┴──────────────────┐
+                        ▼                                     ▼
+                [ Public Routes ]                     [ Protected Routes ]
+              • /login                              (Wrapped in ProtectedRoute)
+              • /signup                             • /citizen      -> Citizen, Authority
+                                                    • /dashboard    -> Worker, Authority
+                                                    • /performance  -> Worker, Authority
+                                                    • /training     -> Worker, Authority
+                                                    • /authority    -> Authority STRICT
+                                                    • /report       -> Authenticated Users
+                                                    • /profile      -> Authenticated Users
+                                           │
+                                           ▼
+                                 [ AuthContext & State ]
+                     • Session lifecycle & profile synchronization
+                     • Role resolution from public.profiles
+                                           │
+                                           ▼
+                             [ Service Layer Abstraction ]
+       ┌───────────────┬───────────────┼───────────────┬───────────────┐
+       ▼               ▼               ▼               ▼               ▼
+[ authService ] [ taskService ] [ complaintService ] [ statsService ] [ storageService ]
+       │               │               │               │               │
+       └───────────────┴───────────────┼───────────────┴───────────────┘
+                                       ▼
+                       [ Supabase Client (supabase-js) ]
+                      • Reads from import.meta.env
+                      • Graceful mock fallback if unconfigured
+                                       │
+                    ┌──────────────────┴──────────────────┐
+                    ▼                                     ▼
+          [ Supabase Auth ]                      [ PostgreSQL Database ]
+        • JWT Session tokens                    • Row Level Security (RLS)
+        • Email / Password                      • 7 relational tables
+                                                • Storage: 'waste-evidence'
+```
+
+---
+
+## 🔐 5. User Roles & Security Matrix
+
+### Role Permissions
+
+| Action / Route | Citizen | Worker | Municipal Authority |
+|---|:---:|:---:|:---:|
+| Public Sign Up (`/signup`) | ✅ | ✅ | ❌ *(Privilege Guard)* |
+| Citizen Portal (`/citizen`) | ✅ | ❌ | ✅ *(Oversight)* |
+| Submit Waste Complaint | ✅ | ✅ | ✅ |
+| View Own Complaints | ✅ | ❌ | ✅ |
+| View Assigned Tasks (`/dashboard`) | ❌ | ✅ | ✅ |
+| Complete Task & Log Record | ❌ | ✅ | ❌ |
+| Performance Charts (`/performance`) | ❌ | ✅ *(Personal)* | ✅ *(Citywide)* |
+| Browse Training Modules (`/training`) | ❌ | ✅ *(Read-only)* | ✅ *(Manage/Publish/Delete)* |
+| Authority Desk (`/authority`) | ❌ | ❌ | ✅ *(Strict)* |
+| Schedule / Delete Tasks | ❌ | ❌ | ✅ |
+| Assign Worker to Grievance | ❌ | ❌ | ✅ |
+| Authorize Wage Incentives | ❌ | ❌ | ✅ |
+| Edit Personal Profile (`/profile`) | ✅ *(Self)* | ✅ *(Self)* | ✅ *(Self)* |
+| Change User Role | ❌ | ❌ | ❌ *(Database RLS Guard)* |
+
+### Security Measures Implemented
+1. **Public Privilege Escalation Guard**: Registration strictly permits only `citizen` or `worker` roles. Attempts to select or register as `authority` are rejected both on the client and in database RLS triggers.
+2. **Zero-Trust Row Level Security (RLS)**:
+   - `profiles`: Users can only update their own contact details. The `WITH CHECK (role = current_role)` condition blocks unauthorized role escalation at the PostgreSQL engine level.
+   - `citizen_complaints`: Citizens can only query complaints belonging to their user ID (`citizen_id = auth.uid()`).
+   - `waste_collection_tasks`: Workers can only view tasks assigned to them or unassigned pool tasks in their zone.
+   - `collection_records`: Workers can insert immutable completion logs; modifications are restricted.
+3. **No Service Role Keys in Frontend**: Only the public anon key (`VITE_SUPABASE_ANON_KEY`) is used in the browser. Database access is governed exclusively by user JWTs and RLS policies.
+4. **Coordinate Bounds Checking**: All coordinates rendered on the map are validated against numeric boundaries (`-90 <= lat <= 90` and `-180 <= lng <= 180`) to prevent Leaflet container crashes.
+
+---
+
+## 🗄️ 6. Database Setup & Supabase Migrations
+
+The database schema and security policies are organized into 4 sequential SQL migrations located in `supabase/migrations/`:
+
+### Migration Files
+1. `20261027000001_initial_schema.sql`:
+   - Creates ENUM types: `user_role`, `task_status`, `complaint_status`, `cleanliness_status`, `audit_status`.
+   - Creates tables: `profiles`, `waste_collection_tasks`, `citizen_complaints`, `collection_records`, `training_resources`, `area_cleanliness`, `worker_audits`.
+   - Sets up `on_auth_user_created` trigger to automatically initialize a profile row upon registration.
+2. `20261027000002_security_rls_policies.sql`:
+   - Enables RLS on all tables.
+   - Creates helper functions: `current_user_role()`, `is_authority()`, `is_worker()`, `is_citizen()`.
+   - Applies granular policies for SELECT, INSERT, UPDATE, and DELETE across all roles.
+3. `20261027000003_seed_data.sql`:
+   - Seeds baseline sector zones, areas, routes, and sample curriculum modules.
+4. `20261027000004_storage_and_stats.sql`:
+   - Creates the `waste-evidence` public storage bucket.
+   - Sets up storage RLS policies allowing authenticated users to upload photos and public reads for verified evidence photos.
+
+---
+
+## ⚙️ 7. Environment Variables
+
+Create a `.env` file in the project directory (`project-shawchh-sarthi-main/`):
+
+```bash
+# Copy template
+cp .env.example .env
+```
+
+Set your Supabase project parameters:
+
+```env
+# [Required] Your Supabase Project URL
+VITE_SUPABASE_URL=https://your-project-id.supabase.co
+
+# [Required] Your Supabase Anon Public Key
+# Found in: Supabase Dashboard -> Project Settings -> API -> Project API keys -> anon/public
+VITE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+```
+
+> [!NOTE]
+> When `VITE_SUPABASE_URL` is omitted or left as placeholder, the application runs in **Graceful Development Fallback Mode**, allowing full UI preview without breaking. Once real credentials are supplied, all operations automatically execute against live Supabase PostgreSQL tables and Storage buckets.
+
+---
+
+## 🚀 8. Local Installation & Development Commands
+
+### Prerequisites
+- **Node.js**: Version 18.0.0 or higher
+- **npm**: Version 9.0.0 or higher
+
+### Step-by-Step Setup
+
+1. **Navigate to the active project folder**:
+   ```bash
+   cd waste-management-main/project-shawchh-sarthi-main
+   ```
+
+2. **Install dependencies**:
+   ```bash
+   npm install
+   ```
+
+3. **Configure environment**:
+   ```bash
+   cp .env.example .env
+   # Edit .env with your Supabase credentials
+   ```
+
+4. **Start the development server**:
+   ```bash
+   npm run dev
+   ```
+   The application will start at `http://localhost:5173`.
+
+5. **Run Linting**:
+   ```bash
+   npm run lint
+   ```
+   Verifies code quality with ESLint and TypeScript rules (0 errors).
+
+6. **Run Test Suites**:
+   ```bash
+   # Run full application workflow & security tests
+   npm test
+
+   # Run auth-specific tests
+   npm run test:auth
+   ```
+
+7. **Production Build**:
+   ```bash
+   npm run build
+   ```
+   Generates optimized static assets in the `dist/` directory.
+
+8. **Preview Production Build**:
+   ```bash
+   npm run preview
+   ```
+
+---
+
+## 🛡️ 9. How to Provision an Authorized Municipal Officer Account
+
+Because public registration blocks users from signing up as municipal authorities, an authority account must be securely provisioned via one of the following methods:
+
+### Method A: Via Supabase SQL Editor (Recommended)
+1. In the Supabase Dashboard, create a user in **Authentication -> Users** (or have the officer sign up publicly as a citizen).
+2. Go to **SQL Editor** and run:
+   ```sql
+   UPDATE public.profiles
+   SET 
+     role = 'authority',
+     designation = 'Zonal Sanitary Officer',
+     zone = 'Zone 1 (All Sectors)'
+   WHERE email = 'officer.email@municipality.gov.in';
+   ```
+3. The officer can now log in at `/login` and will be automatically routed to `/authority`.
+
+---
+
+## ⚠️ 10. Accurate Feature Scope & Known Limitations
+
+To maintain engineering integrity, the following outlines what is genuinely implemented versus what requires external infrastructure:
+
+- **Location-Based Mapping (Implemented)**: Tasks and collection stops render on an interactive OpenStreetMap via Leaflet using stored geographic coordinates (`lat`/`lng`).
+  - *Limitation*: This is **stored location-based route mapping**, not real-time live GPS satellite tracking of moving vehicles (which would require in-vehicle GPS hardware and WebSocket telemetry).
+- **Photo Evidence Overlay (Implemented)**: Workers can capture photos with timestamp and GPS coordinate overlays rendered onto an HTML5 canvas.
+  - *Limitation*: Before/after compliance is checked against supervisor review and database audit logs, not an automated computer-vision AI model.
+- **In-App Alerts (Implemented)**: Success banners, error alerts, and status badges provide instant UI feedback.
+  - *Limitation*: External SMS gateways (e.g. Twilio) or push notification servers (e.g. Firebase Cloud Messaging) are not connected; notifications occur within the web application.
+
+---
+
+## 📄 11. License
+
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.

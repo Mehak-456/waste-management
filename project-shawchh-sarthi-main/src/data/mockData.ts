@@ -16,6 +16,7 @@ export const mockUsers: User[] = [
   {
     id: '1',
     fullName: 'Rajesh Kumar',
+    email: 'worker@swachhseva.in',
     role: 'worker',
     workerId: 'SW-101',
     mobile: '+91-9876543210',
@@ -83,6 +84,7 @@ export const mockUsers: User[] = [
   {
     id: 'c1',
     fullName: 'Pooja Verma',
+    email: 'citizen@example.com',
     role: 'citizen',
     citizenId: 'CZ-101',
     mobile: '+91-9876500001',
@@ -115,6 +117,7 @@ export const mockUsers: User[] = [
   {
     id: 'a1',
     fullName: 'Dr. Ananya Roy',
+    email: 'officer@municipal.gov.in',
     role: 'authority',
     authorityId: 'MUNI-01',
     mobile: '+91-9876599999',
@@ -251,7 +254,7 @@ export const mockLeaderboard: LeaderboardEntry[] = [
 ];
 
 // Mock Issues
-export let mockIssues: Issue[] = [
+export const mockIssues: Issue[] = [
   {
     id: '1',
     workerId: 'SW-101',
@@ -329,7 +332,7 @@ export const getTasksForUser = (): Task[] => {
 };
 
 // Mock Areas Cleanliness Data
-export let mockAreas: AreaCleanliness[] = [
+export const mockAreas: AreaCleanliness[] = [
   {
     id: 'area-1',
     name: 'Green Park Main Gate & Sector A',
@@ -425,7 +428,7 @@ export let mockAreas: AreaCleanliness[] = [
 ];
 
 // Mock Citizen Complaints / Grievances
-export let mockCitizenReports: CitizenReport[] = [
+export const mockCitizenReports: CitizenReport[] = [
   {
     id: 'CR-1001',
     citizenId: 'CZ-101',
@@ -473,7 +476,7 @@ export let mockCitizenReports: CitizenReport[] = [
 ];
 
 // Mock Worker Audit Records for Municipal Authority Review
-export let mockWorkerAudits: WorkerAuditRecord[] = [
+export const mockWorkerAudits: WorkerAuditRecord[] = [
   {
     workerId: 'SW-101',
     workerName: 'Rajesh Kumar',

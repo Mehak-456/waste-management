@@ -3,12 +3,13 @@ export type UserRole = 'worker' | 'citizen' | 'authority';
 export interface User {
   id: string;
   fullName: string;
+  email?: string;
   role: UserRole;
   workerId?: string;
   citizenId?: string;
   authorityId?: string;
   mobile: string;
-  password: string;
+  password?: string;
   team?: string;
   zone: string;
   department?: string;

@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { findUserByCredentials } from '../data/mockData';
 import { 
   Home, 
   BarChart3, 
@@ -15,48 +14,21 @@ import {
   ShieldCheck,
   Building2,
   HardHat,
-  RefreshCw,
-  Sparkles
+  MapPin
 } from 'lucide-react';
-import { UserRole } from '../types';
 
 interface LayoutProps {
   children: React.ReactNode;
 }
 
 const Layout: React.FC<LayoutProps> = ({ children }) => {
-  const { user, login, logout } = useAuth();
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isSwitchRoleOpen, setIsSwitchRoleOpen] = useState(false);
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await logout();
     navigate('/login');
-  };
-
-  const handleQuickSwitch = (role: UserRole) => {
-    let targetUser = null;
-    if (role === 'worker') {
-      targetUser = findUserByCredentials('SW-101', 'password123');
-      if (targetUser) {
-        login(targetUser);
-        navigate('/dashboard');
-      }
-    } else if (role === 'citizen') {
-      targetUser = findUserByCredentials('CZ-101', 'password123');
-      if (targetUser) {
-        login(targetUser);
-        navigate('/citizen');
-      }
-    } else if (role === 'authority') {
-      targetUser = findUserByCredentials('MUNI-01', 'password123');
-      if (targetUser) {
-        login(targetUser);
-        navigate('/authority');
-      }
-    }
-    setIsSwitchRoleOpen(false);
   };
 
   // Determine navigation items based on user role
@@ -70,6 +42,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     } else if (user?.role === 'authority') {
       return [
         { to: '/authority', icon: Building2, label: 'Municipal Command Desk' },
+        { to: '/dashboard', icon: Home, label: 'Worker Operations' },
         { to: '/citizen', icon: ShieldCheck, label: 'Public Area View' },
         { to: '/profile', icon: UserIcon, label: 'My Profile' }
       ];
@@ -165,64 +138,13 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             </nav>
 
             <div className="flex items-center space-x-3">
-              {/* Quick Role Switcher Dropdown */}
-              <div className="relative">
-                <button
-                  type="button"
-                  onClick={() => setIsSwitchRoleOpen(!isSwitchRoleOpen)}
-                  className="flex items-center space-x-1.5 bg-black/20 hover:bg-black/30 border border-white/20 px-2.5 py-1.5 rounded-xl text-xs font-medium backdrop-blur-sm transition"
-                  title="Switch between Worker, Citizen, and Municipal Authority"
-                >
-                  <RefreshCw className="h-3.5 w-3.5 text-yellow-300" />
-                  <span className="hidden sm:inline">Switch Portal</span>
-                </button>
-
-                {isSwitchRoleOpen && (
-                  <div className="absolute right-0 mt-2 w-52 bg-white text-gray-800 rounded-2xl shadow-2xl border border-gray-200 p-2 z-50 text-xs space-y-1">
-                    <p className="px-3 py-1.5 font-bold uppercase tracking-wider text-[10px] text-gray-400">
-                      Switch Active Persona
-                    </p>
-                    <button
-                      onClick={() => handleQuickSwitch('worker')}
-                      className={`w-full flex items-center space-x-2.5 p-2 rounded-xl text-left transition ${
-                        user?.role === 'worker' ? 'bg-green-50 text-green-900 font-bold' : 'hover:bg-gray-100 text-gray-700'
-                      }`}
-                    >
-                      <HardHat className="h-4 w-4 text-green-600" />
-                      <div>
-                        <p>Worker Portal</p>
-                        <p className="text-[10px] text-gray-500 font-normal">SW-101 (Rajesh Kumar)</p>
-                      </div>
-                    </button>
-
-                    <button
-                      onClick={() => handleQuickSwitch('citizen')}
-                      className={`w-full flex items-center space-x-2.5 p-2 rounded-xl text-left transition ${
-                        user?.role === 'citizen' ? 'bg-blue-50 text-blue-900 font-bold' : 'hover:bg-gray-100 text-gray-700'
-                      }`}
-                    >
-                      <UserIcon className="h-4 w-4 text-blue-600" />
-                      <div>
-                        <p>Citizen Portal</p>
-                        <p className="text-[10px] text-gray-500 font-normal">CZ-101 (Pooja Verma)</p>
-                      </div>
-                    </button>
-
-                    <button
-                      onClick={() => handleQuickSwitch('authority')}
-                      className={`w-full flex items-center space-x-2.5 p-2 rounded-xl text-left transition ${
-                        user?.role === 'authority' ? 'bg-purple-50 text-purple-900 font-bold' : 'hover:bg-gray-100 text-gray-700'
-                      }`}
-                    >
-                      <Building2 className="h-4 w-4 text-purple-600" />
-                      <div>
-                        <p>Municipal Authority</p>
-                        <p className="text-[10px] text-gray-500 font-normal">MUNI-01 (Dr. Ananya Roy)</p>
-                      </div>
-                    </button>
-                  </div>
-                )}
-              </div>
+              {/* Authenticated User Zone Badge */}
+              {user && (
+                <div className="hidden sm:flex items-center space-x-1.5 bg-black/20 border border-white/20 px-2.5 py-1.5 rounded-xl text-xs font-medium backdrop-blur-sm">
+                  <MapPin className="h-3.5 w-3.5 text-teal-300" />
+                  <span>{user.zone || 'Sector A'}</span>
+                </div>
+              )}
 
               {/* User Identity Chip */}
               {user && (

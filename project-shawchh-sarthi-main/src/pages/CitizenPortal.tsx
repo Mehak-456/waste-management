@@ -1,11 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { 
-  getAreas, 
-  voteAreaCleanliness, 
-  getCitizenReports, 
-  addCitizenReport 
-} from '../data/mockData';
+import { getAreas, voteArea } from '../services/areaService';
+import { getComplaints, submitComplaint } from '../services/complaintService';
+import { uploadImage } from '../services/storageService';
 import { AreaCleanliness, CitizenReport } from '../types';
 import { 
   CheckCircle2, 
@@ -19,21 +16,35 @@ import {
   ShieldCheck, 
   Sparkles,
   Info,
-  Calendar,
   Layers,
-  ArrowRight,
   Filter,
-  Check
+  Check,
+  Loader2
 } from 'lucide-react';
 
 const CitizenPortal: React.FC = () => {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<'cleanliness' | 'report' | 'schedule' | 'my-reports'>('cleanliness');
-  const [areas, setAreas] = useState<AreaCleanliness[]>(getAreas());
-  const [reports, setReports] = useState<CitizenReport[]>(getCitizenReports());
+  const [areas, setAreas] = useState<AreaCleanliness[]>([]);
+  const [reports, setReports] = useState<CitizenReport[]>([]);
   const [statusFilter, setStatusFilter] = useState<'all' | 'clean' | 'in-progress' | 'needs-attention'>('all');
   const [inspectArea, setInspectArea] = useState<AreaCleanliness | null>(null);
   const [votedAreas, setVotedAreas] = useState<Record<string, boolean>>({});
+  const [isSubmittingReport, setIsSubmittingReport] = useState(false);
+  const [isUploadingImage, setIsUploadingImage] = useState(false);
+
+  useEffect(() => {
+    const loadData = async () => {
+      const [areasRes, reportsRes] = await Promise.all([
+        getAreas(),
+        getComplaints()
+      ]);
+      setAreas(areasRes.data);
+      setReports(reportsRes.data);
+    };
+
+    loadData();
+  }, []);
 
   // Report Form State
   const [reportForm, setReportForm] = useState({
@@ -50,62 +61,71 @@ const CitizenPortal: React.FC = () => {
     return area.status === statusFilter;
   });
 
-  const handleVote = (areaId: string, isClean: boolean) => {
-    voteAreaCleanliness(areaId, isClean);
-    setAreas([...getAreas()]);
+  const handleVote = async (areaId: string, isClean: boolean) => {
+    await voteArea(areaId, isClean);
+    const { data } = await getAreas();
+    setAreas(data);
     setVotedAreas(prev => ({ ...prev, [areaId]: true }));
   };
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        setReportForm(prev => ({
-          ...prev,
-          photoPreview: event.target?.result as string
-        }));
-      };
-      reader.readAsDataURL(file);
+      setIsUploadingImage(true);
+      try {
+        const uploadRes = await uploadImage(file, 'grievances');
+        if (uploadRes.success) {
+          setReportForm(prev => ({
+            ...prev,
+            photoPreview: uploadRes.url
+          }));
+        }
+      } catch (err) {
+        console.error('Image upload failed:', err);
+      } finally {
+        setIsUploadingImage(false);
+      }
     }
   };
 
-  const handleReportSubmit = (e: React.FormEvent) => {
+  const handleReportSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!reportForm.location || !reportForm.description) return;
+    if (!reportForm.location || !reportForm.description || isSubmittingReport) return;
 
-    const newReport: CitizenReport = {
-      id: `CR-${Date.now().toString().slice(-4)}`,
-      citizenId: user?.citizenId || 'CZ-GUEST',
-      citizenName: user?.fullName || 'Resident',
-      citizenMobile: user?.mobile || '+91-9876500000',
-      location: reportForm.location,
-      zone: reportForm.zone,
-      issueType: reportForm.issueType,
-      description: reportForm.description,
-      photo: reportForm.photoPreview || 'https://ik.imagekit.io/sihhackstone/greater_noida_door_to_door_waste-collection_1631556299135_1631556299453.jpeg',
-      timestamp: new Date().toISOString(),
-      status: 'pending'
-    };
+    setIsSubmittingReport(true);
+    try {
+      await submitComplaint({
+        citizenId: user?.id,
+        citizenName: user?.fullName || 'Resident',
+        citizenMobile: user?.mobile || '+91-9876500000',
+        location: reportForm.location,
+        zone: reportForm.zone,
+        issueType: reportForm.issueType,
+        description: reportForm.description,
+        photo: reportForm.photoPreview || 'https://ik.imagekit.io/sihhackstone/greater_noida_door_to_door_waste-collection_1631556299135_1631556299453.jpeg',
+      });
 
-    addCitizenReport(newReport);
-    setReports([...getCitizenReports()]);
-    setReportSubmitted(true);
-    setReportForm({
-      location: '',
-      zone: user?.zone || 'Sector A',
-      issueType: 'overflowing-bin',
-      description: '',
-      photoPreview: ''
-    });
+      const { data } = await getComplaints();
+      setReports(data);
+      setReportSubmitted(true);
+      setReportForm({
+        location: '',
+        zone: user?.zone || 'Sector A',
+        issueType: 'overflowing-bin',
+        description: '',
+        photoPreview: ''
+      });
 
-    setTimeout(() => {
-      setReportSubmitted(false);
-      setActiveTab('my-reports');
-    }, 1500);
+      setTimeout(() => {
+        setReportSubmitted(false);
+        setActiveTab('my-reports');
+      }, 1500);
+    } finally {
+      setIsSubmittingReport(false);
+    }
   };
 
-  const userReports = reports.filter(r => r.citizenId === user?.citizenId);
+  const userReports = reports.filter(r => r.citizenId === user?.citizenId || r.citizenId === user?.id);
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-12">
@@ -425,7 +445,7 @@ const CitizenPortal: React.FC = () => {
                 </label>
                 <select
                   value={reportForm.issueType}
-                  onChange={(e) => setReportForm({ ...reportForm, issueType: e.target.value as any })}
+                  onChange={(e) => setReportForm({ ...reportForm, issueType: e.target.value as CitizenReport['issueType'] })}
                   className="w-full px-3.5 py-2.5 text-sm border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 bg-white"
                 >
                   <option value="overflowing-bin">Overflowing Community Bin</option>
@@ -462,7 +482,12 @@ const CitizenPortal: React.FC = () => {
                     onChange={handleImageChange}
                     className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
                   />
-                  {reportForm.photoPreview ? (
+                  {isUploadingImage ? (
+                    <div className="py-6 space-y-2">
+                      <Loader2 className="h-8 w-8 text-blue-600 animate-spin mx-auto" />
+                      <p className="text-xs font-semibold text-gray-700">Uploading evidence to secure storage...</p>
+                    </div>
+                  ) : reportForm.photoPreview ? (
                     <div className="relative">
                       <img 
                         src={reportForm.photoPreview} 
@@ -483,9 +508,11 @@ const CitizenPortal: React.FC = () => {
 
               <button
                 type="submit"
-                className="w-full py-3 px-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-sm rounded-xl shadow-md transition"
+                disabled={isSubmittingReport || isUploadingImage}
+                className="w-full py-3 px-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-sm rounded-xl shadow-md transition disabled:opacity-50 flex items-center justify-center space-x-2"
               >
-                Submit Citizen Grievance
+                {isSubmittingReport && <Loader2 className="w-4 h-4 animate-spin" />}
+                <span>{isSubmittingReport ? 'Submitting Grievance...' : 'Submit Citizen Grievance'}</span>
               </button>
             </form>
           )}
@@ -599,7 +626,24 @@ const CitizenPortal: React.FC = () => {
           </div>
 
           <div className="grid gap-4">
-            {reports.map((report) => (
+            {userReports.length === 0 ? (
+              <div className="bg-white rounded-3xl p-12 text-center border border-gray-200 shadow-sm space-y-3">
+                <AlertTriangle className="h-10 w-10 text-gray-300 mx-auto" />
+                <h3 className="font-bold text-gray-800 text-base">No Complaints Registered Yet</h3>
+                <p className="text-xs text-gray-500 max-w-sm mx-auto leading-relaxed">
+                  You haven't filed any cleanliness grievances yet. When you report an overflowing bin or uncleaned spot, it will appear here with live tracking.
+                </p>
+                <div className="pt-2">
+                  <button
+                    onClick={() => setActiveTab('report')}
+                    className="inline-flex items-center space-x-1.5 text-xs font-bold bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded-xl transition shadow"
+                  >
+                    <span>File a Cleanliness Report</span>
+                  </button>
+                </div>
+              </div>
+            ) : (
+              userReports.map((report) => (
               <div 
                 key={report.id} 
                 className="bg-white rounded-2xl p-5 shadow-sm border border-gray-200 flex flex-col md:flex-row gap-5 items-start justify-between"
@@ -662,7 +706,7 @@ const CitizenPortal: React.FC = () => {
                   )}
                 </div>
               </div>
-            ))}
+            )))}
           </div>
         </div>
       )}
